@@ -10,7 +10,8 @@ const postMusic=async(req,res)=>{
     }
     try{
         const decoded=jwt.verify(token,process.env.JWT_SECRET)
-        if(decoded.role!=='artist'){
+        console.log(decoded)
+        if(decoded.role!='artist'){
             return res.status(403).json({
                 message:"Forbidden"
             })

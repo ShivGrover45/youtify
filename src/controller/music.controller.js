@@ -11,7 +11,7 @@ const postMusic=async(req,res)=>{
     const music=await musicModel.create({
         uri:result.url,
         title,
-        artist:decoded.id
+        artist:req.user.id
     })
     res.status(201).json({
         message:"music created succesfully",
@@ -26,7 +26,7 @@ const createAlbum=async(req,res)=>{
         const album=await albumModel.create({
             title:title,
             musics:musicId,
-            artist:decoded.id
+            artist:req.user.id
         })
         res.status(201).json({
             album

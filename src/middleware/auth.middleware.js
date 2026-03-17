@@ -30,4 +30,29 @@ const authArtist=async (req,res,next)=>{
 
 }
 
+const authUser=async (req,res,next)=>{
+    const token=req.cookies.token
+    if(!token){
+        return res.status(401).json({
+            message:"Unauthorized"
+        })
+    }
+    try{
+        const decoded=jwt.verify(token,JWT_SECRET)
+    
+    if(decoded.role!="user"){
+        return res.status(403).json({
+            message:"Access not allowed"
+        })
+    }
+     req.user=decoded.role
+     next()
+    }catch(err){
+        console.log(err)
+        return res.status(401).json({
+            message:"Unauthorized"
+        })
+    }
+}
+
 module.exports={authArtist}

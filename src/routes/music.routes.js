@@ -15,4 +15,7 @@ router.post('/album',authMiddleware.authArtist,musicController.createAlbum)
 router.get('/',authMiddleware.authUser,musicController.getAllMusics)
 router.get('/albums',authMiddleware.authUser,musicController.getAlbums)
 router.get('/stream/:id',authMiddleware.authUser,musicController.streamMusic)
+router.get('/search',authMiddleware.authUser,musicController.searchMusic)
+
+router.delete('/delete/:id')
 module.exports=router

@@ -61,4 +61,22 @@ const streamMusic=async(req,res)=>{
     }
 }
 
-module.exports={postMusic,createAlbum,getAllMusics,getAlbums,streamMusic}
+const searchMusic=async(req,res)=>{
+    try{
+        const { title } = req.query;
+        console.log(title)
+        const track=await musicModel.findOne({
+            title:{$regex:title,$options:"i"}
+        })
+        res.status(200).json({
+            message:"Track found",
+            track
+        })
+    }catch(err){
+        return res.status(404).json({
+            message:err.message
+        })
+    }
+}
+
+module.exports={postMusic,createAlbum,getAllMusics,getAlbums,streamMusic,searchMusic}

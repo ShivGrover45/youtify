@@ -17,5 +17,5 @@ router.get('/albums',authMiddleware.authUser,musicController.getAlbums)
 router.get('/stream/:id',authMiddleware.authUser,musicController.streamMusic)
 router.get('/search',authMiddleware.authUser,musicController.searchMusic)
 
-router.delete('/delete/:id')
+//router.delete('/delete/:id')
 module.exports=router

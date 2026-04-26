@@ -6,7 +6,7 @@ const cors=require('cors')
 const app=express()
 
 app.use(cors({
-    origin:'https://youtify-frontend.vercel.app/',
+    origin:'https://youtify-frontend.vercel.app',
     credentials:true
 }))
 app.use(express.json())

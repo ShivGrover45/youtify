@@ -59,7 +59,11 @@ const login=async (req,res)=>{
             id:user._id,
             role:user.role
         },process.env.JWT_SECRET)
-    res.cookie('token',token)
+        res.cookie('token', token, {
+  httpOnly: true,
+  sameSite: 'none',
+  secure: true
+})
     res.status(200).json({
         message:"User logged in Successfully",
         user

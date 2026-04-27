@@ -1,82 +1,178 @@
-# 🎵 Youtify API
+# 🎵 Youtify — Music Streaming API
 
-**Youtify** is a specialized backend service built to master **User Authentication**, **Role-Based Access Control (RBAC)**, and **Cloud-based File Handling**. The project simulates a music streaming platform's core engine.
+A backend REST API simulating a music streaming platform with role-based access control, cloud media storage, and audio streaming via CDN redirection.
 
----
+## 🌐 Live Demo
 
-## 🚀 Key Features
-
-* **Secure Authentication:** Registration and Login system using JWT (JSON Web Tokens).
-* **Role-Based Access Control (RBAC):** Specific endpoints restricted by user permissions.
-* **Cloud Media Handling:** Efficiently uploading and managing audio files using cloud providers (e.g.,ImageKit).
-* **Password Security:** Industry-standard hashing using Bcrypt.
+| | Link |
+|---|---|
+| 🖥️ Frontend | [youtify-frontend.vercel.app](https://youtify-frontend.vercel.app) |
+| 🔗 Backend API | `https://your-render-url.onrender.com` ← replace with your actual URL |
 
 ---
 
-## 📖 API Documentation
+## ⚙️ Tech Stack
 
-### 🔐 Authentication
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Create a new user account. |
-| `POST` | `/api/auth/login` | Validate credentials and return a JWT. |
-
-### 🎼 Music Management
-| Method | Endpoint | Role Required | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/music/upload` | **Artist** | Uploads music files to cloud storage. |
-
-> **Note:** The upload endpoint includes a middleware check. If a user with the role `listener` or `admin` (without artist permissions) attempts to upload, the API returns a `403 Forbidden` status.
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js |
+| Framework | Express.js v5 |
+| Database | MongoDB (Mongoose ODM) |
+| Authentication | JWT + bcryptjs |
+| File Upload | Multer (memory storage) |
+| Cloud Storage | ImageKit CDN |
+| Cookie Handling | cookie-parser |
+| Cross-Origin | CORS (configured for Vercel frontend) |
 
 ---
 
-## 🛠 Tech Stack
+## 🚀 Features
 
-* **Runtime:** Node.js / Express
-* **Database:** MongoDB / PostgreSQL
-* **Auth:** JWT & Bcrypt
-* **File Handling:** Multer (for multipart/form-data)
-* **Cloud Storage:** [Insert Service Name, e.g., Cloudinary or AWS S3]
-
----
-
-## 🧠 Implementation Details
-
-### File Handling Strategy
-To ensure the server remains performant, I implemented a **Stream-to-Cloud** pipeline.
-1.  **Validation:** The API checks for valid audio MIME types.
-2.  **Upload:** Files are passed through `Multer` and sent directly to the cloud.
-3.  **Persistence:** Only the metadata (file URL, duration, artist ID) is stored in the database.
+- **JWT Authentication** — Register, login, and protected route access via HTTP-only cookies
+- **Role-Based Access Control (RBAC)** — Two roles: `artist` (upload/create) and `user` (read/stream)
+- **Music Upload** — Artists upload audio files via multipart form; files are streamed directly to ImageKit CDN (no disk writes)
+- **Album Management** — Artists can create albums and associate tracks
+- **Audio Streaming** — Stream endpoint resolves track by ID and redirects to CDN URL for playback
+- **Track Search** — Case-insensitive regex search by title
+- **CORS Configured** — Locked to frontend origin with credentials support
 
 ---
 
-## 🗺 Roadmap (Upcoming Features)
+## 📁 Project Structure
 
-- [ ] **GET /api/music**: Fetch track lists with search and filter functionality.
-- [ ] **POST /api/music/album**: Create and manage musical albums (Artist only).
-- [ ] **Stream logic**: Direct streaming URLs for frontend integration.
-- [ ] **User Playlists**: Allow users to save their favorite tracks.
+```
+youtify/
+├── server.js                     # Entry point — connects DB, starts server
+├── package.json
+└── src/
+    ├── app.js                    # Express app — middleware + route mounting
+    ├── db/
+    │   └── db.js                 # MongoDB connection
+    ├── routes/
+    │   ├── auth.routes.js        # /api/auth
+    │   └── music.routes.js       # /api/music
+    ├── controller/
+    │   ├── auth.controller.js    # register, login, me
+    │   └── music.controller.js   # upload, stream, search, albums
+    ├── middleware/
+    │   └── auth.middleware.js    # authMiddleware, authArtist, authUser
+    ├── models/
+    │   ├── user.model.js         # User schema (username, email, password, role)
+    │   ├── music.model.js        # Music schema (uri, title, artist ref)
+    │   └── album.model.js        # Album schema (title, musics[], artist ref)
+    └── services/
+        └── storage.service.js    # ImageKit upload wrapper
+```
 
 ---
 
-## ⚙️ Setup & Installation
+## 📖 API Reference
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/your-username/youtify.git](https://github.com/your-username/youtify.git)
-   ```
-2.**change the directory:**
-  ```bash
-  cd youtify   
-  ``` 
-3.**configure environment variables:**
-  ```bash
-  PORT=3000
-  MONGO_URI=your_mongodb_uri
-  JWT_SECRET=your_secret_key
-  CLOUD_NAME=your_cloud_name
-  ```
-4.**Run the Server:**
+### 🔐 Auth — `/api/auth`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/register` | None | Register a new user. Body: `{ username, email, password, role }` |
+| `POST` | `/login` | None | Login. Returns JWT in HTTP-only cookie. Body: `{ username/email, password }` |
+| `GET` | `/me` | Any logged-in user | Returns current user profile (no password) |
+
+**Register body example:**
+```json
+{
+  "username": "shiv",
+  "email": "shiv@example.com",
+  "password": "secret123",
+  "role": "artist"
+}
+```
+
+---
+
+### 🎵 Music — `/api/music`
+
+All music routes require a valid JWT cookie.
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `POST` | `/upload` | `artist` | Upload audio file to ImageKit. Form-data: `music` (file) + `title` (string) |
+| `POST` | `/album` | `artist` | Create an album. Body: `{ title, musicId }` |
+| `GET` | `/` | Any | Fetch all tracks with artist username |
+| `GET` | `/albums` | Any | Fetch all albums with artist info |
+| `GET` | `/stream/:id` | Any | Stream track by MongoDB ID (redirects to CDN URL) |
+| `GET` | `/search?title=` | Any | Case-insensitive title search |
+
+---
+
+## 🔒 RBAC Logic
+
+| Role | Can Upload Music | Can Create Album | Can Stream/Search |
+|------|-----------------|-----------------|-------------------|
+| `artist` | ✅ | ✅ | ✅ |
+| `user` | ❌ (403) | ❌ (403) | ✅ |
+| Unauthenticated | ❌ (401) | ❌ (401) | ❌ (401) |
+
+---
+
+## 🛠️ Local Setup
+
+### Prerequisites
+- Node.js v18+
+- MongoDB Atlas account (or local MongoDB)
+- ImageKit account (free tier works)
+
+### Steps
+
+**1. Clone the repo**
+```bash
+git clone https://github.com/ShivGrover45/youtify.git
+cd youtify
+```
+
+**2. Install dependencies**
+```bash
+npm install
+```
+
+**3. Configure environment variables**
+
+Create a `.env` file in the root:
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
+```
+
+**4. Start the server**
 ```bash
 npm start
+# Server runs on http://localhost:3000
 ```
+
+---
+
+## 🧠 Implementation Notes
+
+### Stream-to-Cloud Upload Pipeline
+Audio files are never written to disk. Multer stores the file in memory as a Buffer, which is base64-encoded and sent directly to ImageKit. Only the resulting CDN URL is persisted in MongoDB.
+
+### Streaming Strategy
+The `/stream/:id` endpoint looks up the track's CDN URL from MongoDB and issues a `302` redirect to the ImageKit-hosted file. This offloads bandwidth entirely to the CDN.
+
+### Cookie-Based Auth
+JWT is stored in an HTTP-only, `SameSite=none`, `Secure=true` cookie — making it inaccessible to JavaScript and safe for cross-origin requests between the Vercel frontend and the deployed backend.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Delete track endpoint (`DELETE /api/music/:id`)
+- [ ] Pagination for `/api/music` (currently returns all tracks)
+- [ ] Thumbnail upload support via ImageKit
+- [ ] Playlist creation for listeners
+- [ ] Rate limiting middleware
+
+---
+
+## 👨‍💻 Author
+
+**Shiv Grover** — [github.com/ShivGrover45](https://github.com/ShivGrover45)

@@ -23,7 +23,7 @@ const register=async (req,res)=>{
         })
         console.log(user)
         const token=jwt.sign({
-            id:user.__id,
+            id:user._id,
             role:user.role
         },process.env.JWT_SECRET)
         res.cookie('token',token)

@@ -15,4 +15,8 @@ app.use(cookie())
 app.use('/api/auth',authRouter)
 app.use('/api/music',musicRouter)
 
+app.get('/',(req,res)=>{
+    console.log("server running fine")
+})
+
 module.exports=app

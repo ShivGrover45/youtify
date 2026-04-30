@@ -17,6 +17,9 @@ app.use('/api/music',musicRouter)
 
 app.get('/',(req,res)=>{
     console.log("server running fine")
+    res.json({
+        message:"Server running fine"
+    })
 })
 
 module.exports=app
